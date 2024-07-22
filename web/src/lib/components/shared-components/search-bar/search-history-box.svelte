@@ -27,7 +27,7 @@
     } else if (selectedIndex === undefined) {
       selectedIndex = increment === 1 ? 0 : suggestionCount - 1;
     } else if (selectedIndex + increment < 0 || selectedIndex + increment >= suggestionCount) {
-      selectedIndex = undefined;
+      clearSelection();
     } else {
       selectedIndex = (selectedIndex + increment + suggestionCount) % suggestionCount;
     }
@@ -44,11 +44,26 @@
       return;
     }
     if (selectedIndex === 0) {
-      onClearAllSearchTerms();
+      handleClearAll();
     } else {
-      onSelectSearchTerm(filteredSearchTerms[selectedIndex - 1]);
+      handleSelect(filteredSearchTerms[selectedIndex - 1]);
     }
   }
+
+  const handleClearAll = () => {
+    clearSelection();
+    onClearAllSearchTerms();
+  };
+
+  const handleClearSingle = (searchTerm: string) => {
+    clearSelection();
+    onClearSearchTerm(searchTerm);
+  };
+
+  const handleSelect = (searchTerm: string) => {
+    clearSelection();
+    onSelectSearchTerm(searchTerm);
+  };
 
   const getId = (index: number | undefined) => {
     if (index === undefined) {
@@ -71,7 +86,7 @@
           type="button"
           class="rounded-lg p-2 font-semibold text-immich-primary aria-selected:bg-immich-primary/25 hover:bg-immich-primary/25 dark:text-immich-dark-primary"
           role="option"
-          on:click={() => onClearAllSearchTerms()}
+          on:click={() => handleClearAll()}
           tabindex="-1"
           aria-selected={selectedIndex === 0}
         >
@@ -86,7 +101,7 @@
             <div
               id={getId(i + 1)}
               class="relative flex w-full cursor-pointer gap-3 py-3 pl-5 hover:bg-gray-100 aria-selected:bg-gray-100 dark:aria-selected:bg-gray-500/30 dark:hover:bg-gray-500/30"
-              on:click={() => onSelectSearchTerm(savedSearchTerm)}
+              on:click={() => handleSelect(savedSearchTerm)}
               role="option"
               tabindex="-1"
               aria-selected={selectedIndex === i + 1}
@@ -101,7 +116,7 @@
                 size="18"
                 padding="1"
                 tabindex={-1}
-                on:click={() => onClearSearchTerm(savedSearchTerm)}
+                on:click={() => handleClearSingle(savedSearchTerm)}
               />
             </div>
           </div>
