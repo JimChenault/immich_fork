@@ -28,6 +28,7 @@
   let showFilter = false;
   let isSearchSuggestions = false;
   let selectedId: string | undefined;
+  let lastSearchTerm: string = '';
   let moveSelection: (direction: 1 | -1) => void;
   let clearSelection: () => void;
   let selectActiveOption: () => void;
@@ -66,6 +67,7 @@
     if ($isSearchEnabled) {
       return;
     }
+    lastSearchTerm = value;
     showSuggestions = true;
     $isSearchEnabled = true;
   };
@@ -75,6 +77,7 @@
       $preventRaceConditionSearchBar = true;
     }
 
+    value = lastSearchTerm;
     showSuggestions = false;
     $isSearchEnabled = false;
     showFilter = false;
@@ -82,6 +85,7 @@
 
   const onHistoryTermClick = async (searchTerm: string) => {
     value = searchTerm;
+    lastSearchTerm = searchTerm;
     const searchPayload = { query: searchTerm };
     await onSearch(searchPayload);
   };
@@ -96,6 +100,7 @@
   };
 
   const onSubmit = () => {
+    lastSearchTerm = value;
     handlePromiseError(onSearch({ query: value }));
     saveSearchTerm(value);
   };
