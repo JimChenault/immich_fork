@@ -79,6 +79,7 @@
   };
 
   const onHistoryTermClick = async (searchTerm: string) => {
+    value = searchTerm;
     const searchPayload = { query: searchTerm };
     await onSearch(searchPayload);
   };
@@ -106,6 +107,19 @@
     clearSelection();
     showSuggestions = false;
     showFilter = false;
+  };
+
+  const onArrow = async (direction: 1 | -1) => {
+    openDropdown();
+    await tick();
+    moveSelection(direction);
+  };
+
+  const onEnter = (event: KeyboardEvent) => {
+    if (selectedId) {
+      event.preventDefault();
+      selectActiveOption();
+    }
   };
 
   const openDropdown = () => {
@@ -153,33 +167,9 @@
       use:shortcuts={[
         { shortcut: { key: 'Escape' }, onShortcut: onEscape },
         { shortcut: { ctrl: true, shift: true, key: 'k' }, onShortcut: onFilterClick },
-        {
-          shortcut: { key: 'ArrowUp' },
-          onShortcut: async () => {
-            openDropdown();
-            await tick();
-            moveSelection(-1);
-          },
-        },
-        {
-          shortcut: { key: 'ArrowDown' },
-          onShortcut: async () => {
-            openDropdown();
-            await tick();
-            moveSelection(1);
-          },
-        },
-        {
-          shortcut: { key: 'Enter' },
-          onShortcut: (event) => {
-            if (selectedId) {
-              event.preventDefault();
-              selectActiveOption();
-              return;
-            }
-          },
-          preventDefault: false,
-        },
+        { shortcut: { key: 'ArrowUp' }, onShortcut: () => onArrow(-1) },
+        { shortcut: { key: 'ArrowDown' }, onShortcut: () => onArrow(1) },
+        { shortcut: { key: 'Enter' }, onShortcut: onEnter, preventDefault: false },
         { shortcut: { key: 'ArrowDown', alt: true }, onShortcut: openDropdown },
       ]}
     />
