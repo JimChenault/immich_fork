@@ -89,6 +89,7 @@
           on:click={() => handleClearAll()}
           tabindex="-1"
           aria-selected={selectedIndex === 0}
+          aria-label={$t('clear_all_recent_searches')}
         >
           {$t('clear_all')}
         </button>
