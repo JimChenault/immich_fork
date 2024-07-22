@@ -13,17 +13,27 @@
   import { focusOutside } from '$lib/actions/focus-outside';
   import CircleIconButton from '$lib/components/elements/buttons/circle-icon-button.svelte';
   import { t } from 'svelte-i18n';
+  import { generateId } from '$lib/utils/generate-id';
+  import { tick } from 'svelte';
+  import { clear } from '@testing-library/user-event/dist/cjs/utility/clear.js';
 
   export let value = '';
   export let grayTheme: boolean;
   export let searchQuery: MetadataSearchDto | SmartSearchDto = {};
+
+  $: showClearIcon = value.length > 0;
 
   let input: HTMLInputElement;
 
   let showSuggestions = false;
   let showFilter = false;
   let isSearchSuggestions = false;
-  $: showClearIcon = value.length > 0;
+  let selectedId: string | undefined;
+  let moveSelection: (direction: 1 | -1) => void;
+  let clearSelection: () => void;
+  let selectActiveOption: () => void;
+
+  const listboxId = generateId();
 
   const onSearch = async (payload: SmartSearchDto | MetadataSearchDto) => {
     const params = getMetadataSearchQuery(payload);
@@ -93,6 +103,7 @@
   };
 
   const onEscape = () => {
+    clearSelection();
     showSuggestions = false;
     showFilter = false;
   };
@@ -121,9 +132,6 @@
     on:focusin={onFocusIn}
     role="search"
   >
-    <div class="absolute inset-y-0 left-0 flex items-center pl-2">
-      <CircleIconButton type="submit" title={$t('search')} icon={mdiMagnify} size="20" />
-    </div>
     <label for="main-search-bar" class="sr-only">{$t('search_your_photos')}</label>
     <input
       type="text"
@@ -140,11 +148,38 @@
       bind:this={input}
       on:click={onFocusIn}
       disabled={showFilter}
+      aria-controls={listboxId}
+      aria-activedescendant={selectedId}
       use:shortcuts={[
         { shortcut: { key: 'Escape' }, onShortcut: onEscape },
         { shortcut: { ctrl: true, shift: true, key: 'k' }, onShortcut: onFilterClick },
-        { shortcut: { key: 'ArrowUp' }, onShortcut: openDropdown },
-        { shortcut: { key: 'ArrowDown' }, onShortcut: openDropdown },
+        {
+          shortcut: { key: 'ArrowUp' },
+          onShortcut: async () => {
+            openDropdown();
+            await tick();
+            moveSelection(-1);
+          },
+        },
+        {
+          shortcut: { key: 'ArrowDown' },
+          onShortcut: async () => {
+            openDropdown();
+            await tick();
+            moveSelection(1);
+          },
+        },
+        {
+          shortcut: { key: 'Enter' },
+          onShortcut: (event) => {
+            if (selectedId) {
+              event.preventDefault();
+              selectActiveOption();
+              return;
+            }
+          },
+          preventDefault: false,
+        },
         { shortcut: { key: 'ArrowDown', alt: true }, onShortcut: openDropdown },
       ]}
     />
@@ -157,17 +192,24 @@
         <CircleIconButton on:click={onClear} icon={mdiClose} title={$t('clear')} size="20" />
       </div>
     {/if}
+    <div class="absolute inset-y-0 left-0 flex items-center pl-2">
+      <CircleIconButton type="submit" title={$t('search')} icon={mdiMagnify} size="20" />
+    </div>
 
     <!-- SEARCH HISTORY BOX -->
-    {#if showSuggestions}
-      <SearchHistoryBox
-        searchQuery={value}
-        bind:isSearchSuggestions
-        onClearAllSearchTerms={clearAllSearchTerms}
-        onClearSearchTerm={(searchTerm) => clearSearchTerm(searchTerm)}
-        onSelectSearchTerm={(searchTerm) => handlePromiseError(onHistoryTermClick(searchTerm))}
-      />
-    {/if}
+    <SearchHistoryBox
+      id={listboxId}
+      searchQuery={value}
+      isOpen={showSuggestions}
+      bind:isSearchSuggestions
+      bind:moveSelection
+      bind:clearSelection
+      bind:selectActiveOption
+      onClearAllSearchTerms={clearAllSearchTerms}
+      onClearSearchTerm={(searchTerm) => clearSearchTerm(searchTerm)}
+      onSelectSearchTerm={(searchTerm) => handlePromiseError(onHistoryTermClick(searchTerm))}
+      onActiveSelectionChange={(id) => (selectedId = id)}
+    />
   </form>
 
   {#if showFilter}

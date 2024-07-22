@@ -6,46 +6,90 @@
   import { t } from 'svelte-i18n';
   import CircleIconButton from '$lib/components/elements/buttons/circle-icon-button.svelte';
 
+  export let id: string;
   export let searchQuery: string = '';
   export let isSearchSuggestions: boolean = false;
+  export let isOpen: boolean = false;
   export let onSelectSearchTerm: (searchTerm: string) => void;
   export let onClearSearchTerm: (searchTerm: string) => void;
   export let onClearAllSearchTerms: () => void;
+  export let onActiveSelectionChange: (selectedId: string | undefined) => void;
 
   $: filteredSearchTerms = $savedSearchTerms.filter((term) => term.toLowerCase().includes(searchQuery.toLowerCase()));
   $: isSearchSuggestions = filteredSearchTerms.length > 0;
+  $: suggestionCount = filteredSearchTerms.length + 1;
+
+  let selectedIndex: number | undefined = undefined;
+
+  export function moveSelection(increment: 1 | -1) {
+    if (!isSearchSuggestions) {
+      return;
+    } else if (selectedIndex === undefined) {
+      selectedIndex = increment === 1 ? 0 : suggestionCount - 1;
+    } else if (selectedIndex + increment < 0 || selectedIndex + increment >= suggestionCount) {
+      selectedIndex = undefined;
+    } else {
+      selectedIndex = (selectedIndex + increment + suggestionCount) % suggestionCount;
+    }
+    onActiveSelectionChange(getId(selectedIndex));
+  }
+
+  export function clearSelection() {
+    selectedIndex = undefined;
+    onActiveSelectionChange(undefined);
+  }
+
+  export function selectActiveOption() {
+    if (selectedIndex === undefined) {
+      return;
+    }
+    if (selectedIndex === 0) {
+      onClearAllSearchTerms();
+    } else {
+      onSelectSearchTerm(filteredSearchTerms[selectedIndex - 1]);
+    }
+  }
+
+  const getId = (index: number | undefined) => {
+    if (index === undefined) {
+      return undefined;
+    }
+    return `${id}-${index}`;
+  };
 </script>
 
-<div transition:fly={{ y: 25, duration: 250 }}>
-  {#if isSearchSuggestions}
+<div role="listbox" {id}>
+  {#if isOpen && isSearchSuggestions}
     <div
+      transition:fly={{ y: 25, duration: 150 }}
       class="absolute w-full rounded-b-3xl border-2 border-t-0 border-gray-200 bg-white pb-5 shadow-2xl transition-all dark:border-gray-600 dark:bg-immich-dark-gray dark:text-gray-300"
-      role="listbox"
     >
       <div class="flex items-center justify-between px-5 pt-5 text-xs">
         <p>{$t('recent_searches').toUpperCase()}</p>
         <button
+          id={getId(0)}
           type="button"
-          class="rounded-lg p-2 font-semibold text-immich-primary hover:bg-immich-primary/25 dark:text-immich-dark-primary"
+          class="rounded-lg p-2 font-semibold text-immich-primary aria-selected:bg-immich-primary/25 hover:bg-immich-primary/25 dark:text-immich-dark-primary"
+          role="option"
           on:click={() => onClearAllSearchTerms()}
           tabindex="-1"
+          aria-selected={selectedIndex === 0}
         >
           {$t('clear_all')}
         </button>
       </div>
 
       {#each filteredSearchTerms as savedSearchTerm, i (i)}
-        <div
-          class="flex w-full items-center justify-between text-sm text-black hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-500/10"
-        >
+        <div class="flex w-full items-center justify-between text-sm text-black dark:text-gray-300">
           <div class="relative w-full items-center">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-              class="relative flex w-full cursor-pointer gap-3 py-3 pl-5"
+              id={getId(i + 1)}
+              class="relative flex w-full cursor-pointer gap-3 py-3 pl-5 hover:bg-gray-100 aria-selected:bg-gray-100 dark:aria-selected:bg-gray-500/30 dark:hover:bg-gray-500/30"
               on:click={() => onSelectSearchTerm(savedSearchTerm)}
               role="option"
               tabindex="-1"
-              aria-selected="false"
+              aria-selected={selectedIndex === i + 1}
             >
               <Icon path={mdiMagnify} size="1.5em" ariaHidden={true} />
               {savedSearchTerm}
