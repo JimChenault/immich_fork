@@ -170,8 +170,10 @@
       on:click={onFocusIn}
       on:input={openDropdown}
       disabled={showFilter}
+      role="combobox"
       aria-controls={listboxId}
       aria-activedescendant={selectedId}
+      aria-expanded={showSuggestions && isSearchSuggestions}
       use:shortcuts={[
         { shortcut: { key: 'Escape' }, onShortcut: onEscape },
         { shortcut: { ctrl: true, shift: true, key: 'k' }, onShortcut: onFilterClick },
@@ -191,7 +193,7 @@
       </div>
     {/if}
     <div class="absolute inset-y-0 left-0 flex items-center pl-2">
-      <CircleIconButton type="submit" title={$t('search')} icon={mdiMagnify} size="20" />
+      <CircleIconButton type="submit" disabled={showFilter} title={$t('search')} icon={mdiMagnify} size="20" />
     </div>
 
     <!-- SEARCH HISTORY BOX -->

@@ -28,6 +28,7 @@
   export let ariaExpanded: boolean | undefined = undefined;
   export let ariaControls: string | undefined = undefined;
   export let tabindex: number | undefined = undefined;
+  export let disabled: boolean | undefined = undefined;
 
   /**
    * Override the default styling of the button for specific use cases, such as the icon color.
@@ -55,6 +56,7 @@
   {title}
   {type}
   {tabindex}
+  {disabled}
   style:width={buttonSize ? buttonSize + 'px' : ''}
   style:height={buttonSize ? buttonSize + 'px' : ''}
   class="flex place-content-center place-items-center rounded-full {colorClass} {paddingClass} transition-all hover:dark:text-immich-dark-gray {className} {mobileClass}"
