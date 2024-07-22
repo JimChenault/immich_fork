@@ -160,6 +160,7 @@
       bind:value
       bind:this={input}
       on:click={onFocusIn}
+      on:input={openDropdown}
       disabled={showFilter}
       aria-controls={listboxId}
       aria-activedescendant={selectedId}
