@@ -15,7 +15,6 @@
   import { t } from 'svelte-i18n';
   import { generateId } from '$lib/utils/generate-id';
   import { tick } from 'svelte';
-  import { clear } from '@testing-library/user-event/dist/cjs/utility/clear.js';
 
   export let value = '';
   export let grayTheme: boolean;
