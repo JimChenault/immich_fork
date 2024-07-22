@@ -63,6 +63,9 @@
   };
 
   const onFocusIn = () => {
+    if ($isSearchEnabled) {
+      return;
+    }
     showSuggestions = true;
     $isSearchEnabled = true;
   };
